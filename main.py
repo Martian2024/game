@@ -66,7 +66,7 @@ def settings_menu():
         pygame.display.update()
 
 def start_game():
-    
+    pass
 
         
 
