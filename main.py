@@ -1,9 +1,10 @@
 import pygame
 import pygame_gui
+from camera import Camera
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
-running = True
+FPS = 120
 
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -21,7 +22,7 @@ def start_menu():
     quit_button = pygame_gui.elements.ui_button.UIButton(pygame.Rect(0, 1, -1, -1), manager=start_manager, container=start_container, anchors={'centerx': 'centerx', 'top_target': settings_button}, text='ВЫЙТИ')
 
     while running:
-        time_delta = clock.tick(60)/1000.0
+        time_delta = clock.tick(FPS)/1000.0
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -30,6 +31,8 @@ def start_menu():
                     running = False
                 elif event.ui_element == settings_button:
                     settings_menu()
+                elif event.ui_element == start_button:
+                    the_game()
 
             start_manager.process_events(event)
 
@@ -48,7 +51,7 @@ def settings_menu():
     setting_container = pygame_gui.elements.ui_auto_resizing_container.UIAutoResizingContainer(pygame.Rect(0, 0, 50, 50), manager=settings_manager, anchors={'centerx': 'centerx', 'centery': 'centery'})
     exit_button = pygame_gui.elements.ui_button.UIButton(pygame.Rect(0, 1, -1, -1), manager=settings_manager, container=setting_container, anchors={'centerx': 'centerx'}, text='ВЫЙТИ')
     while running_settings:
-        time_delta = clock.tick(60)/1000.0
+        time_delta = clock.tick(FPS)/1000.0
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running_settings = False
@@ -65,8 +68,54 @@ def settings_menu():
         screen.blit(setting_screen, (0, 0))
         pygame.display.update()
 
-def start_game():
-    pass
+def the_game():
+    mouse_tracking = False
+    mouse_previous_pos = (0, 0)
+
+    main_loop = True
+    main_screen = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+    main_manager = pygame_gui.UIManager((SCREEN_WIDTH, SCREEN_HEIGHT))
+
+    game_map = pygame.image.load('images\\map.png')
+    camera = Camera()
+    
+    while main_loop:
+        time_delta = clock.tick(FPS)/1000.0
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                main_loop = False
+            elif event.type == pygame_gui.UI_BUTTON_PRESSED:
+                pass
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                mouse_tracking = True
+                mouse_previous_pos = pygame.mouse.get_pos()
+            elif event.type == pygame.MOUSEMOTION:
+                if mouse_tracking:
+                    camera.position = (camera.position[0] - (pygame.mouse.get_pos()[0] - mouse_previous_pos[0]), camera.position[1] - (pygame.mouse.get_pos()[1] - mouse_previous_pos[1]))
+                    mouse_previous_pos = pygame.mouse.get_pos()
+            elif event.type == pygame.MOUSEBUTTONUP:
+                if mouse_tracking:
+                    mouse_tracking = False
+            elif event.type == pygame.MOUSEWHEEL:
+                if event.y == 1:
+                    camera.scaling_factor += camera.scaling_step
+                if event.y == -1:
+                    camera.scaling_factor -= camera.scaling_step
+
+            main_manager.process_events(event)
+        main_manager.update(time_delta)
+        main_manager.draw_ui(main_screen)
+
+        main_screen.fill((0, 0, 0))
+
+        game_map = pygame.image.load('images\\map.png')
+        game_map = pygame.transform.scale_by(game_map, camera.scaling_factor)
+        main_screen.blit(game_map, (-1 * game_map.size[0] // 2 - camera.position[0], -1 * game_map.size[1] // 2 - camera.position[1]))
+
+        screen.blit(main_screen, (0, 0))
+        pygame.display.update()
+
+
 
         
 
