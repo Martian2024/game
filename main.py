@@ -77,7 +77,7 @@ def the_game():
     main_manager = pygame_gui.UIManager((SCREEN_WIDTH, SCREEN_HEIGHT))
 
     game_map = pygame.image.load('images\\map.png')
-    camera = Camera()
+    camera = Camera(game_map.size, (SCREEN_WIDTH, SCREEN_HEIGHT))
     
     while main_loop:
         time_delta = clock.tick(FPS)/1000.0
@@ -91,7 +91,7 @@ def the_game():
                 mouse_previous_pos = pygame.mouse.get_pos()
             elif event.type == pygame.MOUSEMOTION:
                 if mouse_tracking:
-                    camera.position = (camera.position[0] - (pygame.mouse.get_pos()[0] - mouse_previous_pos[0]), camera.position[1] - (pygame.mouse.get_pos()[1] - mouse_previous_pos[1]))
+                    camera.position = (camera.position[0] - (pygame.mouse.get_pos()[0] - mouse_previous_pos[0]) / camera.scaling_factor, camera.position[1] - (pygame.mouse.get_pos()[1] - mouse_previous_pos[1]) / camera.scaling_factor)
                     mouse_previous_pos = pygame.mouse.get_pos()
             elif event.type == pygame.MOUSEBUTTONUP:
                 if mouse_tracking:
@@ -108,9 +108,7 @@ def the_game():
 
         main_screen.fill((0, 0, 0))
 
-        game_map = pygame.image.load('images\\map.png')
-        game_map = pygame.transform.scale_by(game_map, camera.scaling_factor)
-        main_screen.blit(game_map, (-1 * game_map.size[0] // 2 - camera.position[0], -1 * game_map.size[1] // 2 - camera.position[1]))
+        main_screen.blit(pygame.transform.scale_by(game_map, camera.scaling_factor), camera.return_render_coords())
 
         screen.blit(main_screen, (0, 0))
         pygame.display.update()
