@@ -6,8 +6,8 @@ import random
 from math import sqrt
 
 
-SCREEN_WIDTH = 1000
-SCREEN_HEIGHT = 800
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
 FPS = 120
 
 pygame.init()
@@ -28,6 +28,7 @@ def generate_map_backgound(tiles, tile_size):
 def check_visibility(a, b):
         x = a.rect.center[0] - b.rect.center[0]
         y = a.rect.center[0] - b.rect.center[0]
+        print(a, b, sqrt(x ** 2 + y ** 2))
         return sqrt(x ** 2 + y ** 2) < a.vision
 
 
@@ -74,7 +75,9 @@ def start_menu():
                 elif event.ui_element == settings_button:
                     settings_menu()
                 elif event.ui_element == start_button:
-                    the_game()
+                    result = the_game()
+                    running = False
+                    
 
             start_manager.process_events(event)
 
@@ -91,6 +94,35 @@ def start_menu():
         start_manager.draw_ui(start_screen)
 
         screen.blit(start_screen, (0, 0))
+        pygame.display.update()
+
+    end_game(result)
+
+def end_game(result):
+    end_manager = pygame_gui.UIManager((SCREEN_WIDTH, SCREEN_HEIGHT))
+    end_container = pygame_gui.elements.ui_auto_resizing_container.UIAutoResizingContainer(pygame.Rect(10, 10, 50, 50), manager=end_manager, anchors={'centerx': 'centerx', 'centery': 'centery'})
+    quit_button = pygame_gui.elements.ui_button.UIButton(pygame.Rect(0, 1, -1, -1), manager=end_manager, container=end_container, anchors={'centerx': 'centerx', 'centery': 'centery'}, text='ВЫЙТИ')
+    in_this_menu = True
+    while in_this_menu:
+        time_delta = clock.tick(FPS)/1000.0
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                in_this_menu = False
+            if event.type == pygame_gui.UI_BUTTON_PRESSED:
+                if event.ui_element == quit_button:
+                    in_this_menu = False
+
+            end_manager.process_events(event)
+
+        screen.fill((0, 0, 0))
+        pygame.font.init()
+        my_font = pygame.font.SysFont('Comic Sans MS', 30)
+        text_surface = my_font.render('You Won!' if result else 'You Lost!', False, (0, 255, 0))
+        end_manager.update(time_delta)
+        end_manager.draw_ui(screen)
+        screen.blit(text_surface, ((SCREEN_WIDTH - text_surface.get_rect()[2])  // 2, (SCREEN_HEIGHT - text_surface.get_rect()[3])  // 3))
+        # print(SCREEN_WIDTH, SCREEN_HEIGHT)
+        # print(text_surface.get_rect()[2], (SCREEN_HEIGHT - text_surface.get_rect()[1])  // 2)
         pygame.display.update()
 
 
@@ -154,12 +186,13 @@ def the_game():
         Tree((random.randint(-1 * (tiles * tile_size) // 2 + 20, (tiles * tile_size) // 2 - 20), random.randint(-1 * (tiles * tile_size) // 2 + 20, (tiles * tile_size) // 2 - 20)), 50, trees)
     #houses = pygame.sprite.Group([SimpleHouse((random.randint(1, SCREEN_WIDTH), random.randint(1, SCREEN_HEIGHT)), (random.randint(25, 100), random.randint(25, 100))) for i in range(random.randint(1, 10))])
     crew = pygame.sprite.Group()
-    rifleman = RifleMan((0 ,0), crew)
-    shield = Shield((20, 20), crew)
+    rifleman = RifleMan((0, tile_size * (tiles // 2 - 1) + 50), crew)
+    rifleman2 = RifleMan((-50, tile_size * (tiles // 2 - 1) + 50), crew)
+    shield = Shield((0, tile_size * (tiles // 2 - 1)), crew)
     enemies = pygame.sprite.Group()
     boss = Boss((0, 0), enemies)
 
-    camera = Camera(game_map.size, (SCREEN_WIDTH, SCREEN_HEIGHT))
+    camera = Camera(game_map.size, (SCREEN_WIDTH, SCREEN_HEIGHT), (0, tile_size * (tiles // 2 - 1)))
 
     while main_loop:
         time_delta = clock.tick(FPS)/1000.0
@@ -242,9 +275,10 @@ def the_game():
                     if house.rect.clipline(i.position, member.position):
                         intersects = True
                 if not intersects:
-                    print(1)
                     i.target = member
         enemies.update()
+        if boss.cooldown_counter == 0:
+            BaseEnemy((random.randint(-20, 20), random.randint(-20, 20)), enemies)
 
         for member in crew:
             if member.auto_attack:
@@ -252,6 +286,7 @@ def the_game():
                 if visible_enemies:
                     member.target = visible_enemies[0]
             if member.target:
+                print(member.target)
                 if member.cooldown_counter == 0:
                     member.cooldown_counter += 1
                     intersects = False
@@ -268,11 +303,6 @@ def the_game():
                     member.cooldown_counter += 1
                     if member.cooldown_counter == member.counter_max:
                         member.cooldown_counter = 0
-
-
-
-
-
 
         for i in houses:
             main_screen.blit(pygame.transform.scale_by(i.image, camera.scaling_factor), (camera.screen_size[0] // 2 - (camera.position[0] - i.rect.center[0]) * camera.scaling_factor - i.rect.size[0] // 2 * camera.scaling_factor, camera.screen_size[1] // 2 - (camera.position[1] - i.rect.center[1]) * camera.scaling_factor - i.rect.size[1] // 2 * camera.scaling_factor))
@@ -305,6 +335,8 @@ def the_game():
 
         if boss.hp <= 0:
             return True
+        elif len(crew) == 0:
+            return False
 
 
 

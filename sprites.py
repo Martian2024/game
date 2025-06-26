@@ -97,12 +97,14 @@ class Shield(Sprite):
         self.vision = 250
 
         self.hp = 1
-        self.max_hp = 1
+        self.max_hp = 20
+        self.hp_regen = 1
         self.target = None
         self.cooldown_counter = 0
         self.counter_max = 60
 
     def update(self):
+        self.hp = min(self.hp + self.hp_regen, self.max_hp)
         if self.selected:
             self.image = self.images[1]
         else:
@@ -148,7 +150,6 @@ class BaseEnemy(Sprite):
 
     def update(self):
         if self.target:
-            print(2)
             x = self.target.rect.center[0] - self.position[0]
             y = self.target.rect.center[1] - self.position[1]
             length = sqrt(x ** 2 + y ** 2)

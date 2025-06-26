@@ -1,6 +1,6 @@
 class Camera:
-    def __init__(self, map_size, screen_size):
-        self.position = (0, 0)
+    def __init__(self, map_size, screen_size, pos):
+        self.position = pos
         self.scaling_factor = 1
         self.scaling_step = 0.1
         self.map_size = map_size
