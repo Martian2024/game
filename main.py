@@ -27,8 +27,7 @@ def generate_map_backgound(tiles, tile_size):
 
 def check_visibility(a, b):
         x = a.rect.center[0] - b.rect.center[0]
-        y = a.rect.center[0] - b.rect.center[0]
-        print(a, b, sqrt(x ** 2 + y ** 2))
+        y = a.rect.center[1] - b.rect.center[1]
         return sqrt(x ** 2 + y ** 2) < a.vision
 
 
@@ -190,6 +189,8 @@ def the_game():
     rifleman2 = RifleMan((-50, tile_size * (tiles // 2 - 1) + 50), crew)
     shield = Shield((0, tile_size * (tiles // 2 - 1)), crew)
     enemies = pygame.sprite.Group()
+    for i in range(100):
+        BaseEnemy((random.randint(-1 * (tiles * tile_size) // 2 + 20, (tiles * tile_size) // 2 - 20), random.randint(-1 * (tiles * tile_size) // 2 + 20, (tiles * tile_size) // 2 - 20)), enemies)
     boss = Boss((0, 0), enemies)
 
     camera = Camera(game_map.size, (SCREEN_WIDTH, SCREEN_HEIGHT), (0, tile_size * (tiles // 2 - 1)))
@@ -216,10 +217,12 @@ def the_game():
                         else:
                             selected_sprite[0].selected = True
                         #selected_sprite[0].update()
-                elif event.button == 2:
+                # elif event.button == 2:
+                #     mouse_tracking = True
+                #     mouse_previous_pos = pygame.mouse.get_pos()
+                elif event.button == 3:
                     mouse_tracking = True
                     mouse_previous_pos = pygame.mouse.get_pos()
-                elif event.button == 3:
                     if selected_sprite:
                         x = camera.position[0] + (pygame.mouse.get_pos()[0] - camera.screen_size[0] // 2) / camera.scaling_factor
                         y = camera.position[1] + (pygame.mouse.get_pos()[1] - camera.screen_size[1] // 2) / camera.scaling_factor
@@ -283,10 +286,10 @@ def the_game():
         for member in crew:
             if member.auto_attack:
                 visible_enemies = pygame.sprite.spritecollide(member, enemies, dokill=False, collided=check_visibility)
+                print(visible_enemies)
                 if visible_enemies:
                     member.target = visible_enemies[0]
             if member.target:
-                print(member.target)
                 if member.cooldown_counter == 0:
                     member.cooldown_counter += 1
                     intersects = False
@@ -317,7 +320,7 @@ def the_game():
 
         for i in crew:
             main_screen.blit(i.image, (camera.screen_size[0] // 2 - (camera.position[0] - i.rect.center[0]) * camera.scaling_factor - i.rect.size[0] // 2 * camera.scaling_factor - i.rect.width // 2, camera.screen_size[1] // 2 - (camera.position[1] - i.rect.center[1]) * camera.scaling_factor - i.rect.size[1] // 2 * camera.scaling_factor - i.rect.height // 2))
-            pygame.draw.circle(main_screen, (int(255 * (i.max_hp - i.hp) / i.max_hp), int(255 * (i.hp / i.max_hp)), 0), (camera.screen_size[0] // 2 - (camera.position[0] - i.rect.center[0]) * camera.scaling_factor - i.rect.size[0] // 2 * camera.scaling_factor, camera.screen_size[1] // 2 - (camera.position[1] - i.rect.center[1]) * camera.scaling_factor - i.rect.size[1] // 2 * camera.scaling_factor), 20, 5)
+            pygame.draw.circle(main_screen, (max(0, int(255 * (i.max_hp - i.hp) / i.max_hp)), max(0, int(255 * (i.hp / i.max_hp))), 0), (camera.screen_size[0] // 2 - (camera.position[0] - i.rect.center[0]) * camera.scaling_factor - i.rect.size[0] // 2 * camera.scaling_factor, camera.screen_size[1] // 2 - (camera.position[1] - i.rect.center[1]) * camera.scaling_factor - i.rect.size[1] // 2 * camera.scaling_factor), 20, 5)
 
         
         fog_of_war.fill((0, 0, 0))

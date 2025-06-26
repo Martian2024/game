@@ -85,7 +85,7 @@ class Shield(Sprite):
         self.rect.center = pos
 
         self.order = 'STOP'
-        self.auto_attack = True
+        self.auto_attack = False
         self.motionvector = (0, 0)
 
         self.selected = False
@@ -190,7 +190,7 @@ class Boss(Sprite):
         self.vision = 250
         self.target = None
         self.cooldown_counter = 0
-        self.counter_max = 30
+        self.counter_max = 240
         self.hp = 20
 
     def update(self):
